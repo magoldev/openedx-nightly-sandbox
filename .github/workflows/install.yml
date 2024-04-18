@@ -4,15 +4,15 @@ name: Install from scratch
 on:
   schedule:
     # Run at 7am every day
-    # - cron:  '0 7 * * *'
+    - cron:  '0 7 * * *'
     # Run at 7am every Monday
-    - cron:  '0 7 * * 1'
+    # - cron:  '0 7 * * 1'
   workflow_dispatch:
     inputs:
       RESET:
         description: Reset existing platform data?
         type: boolean
-        default: true
+        default: false
 
 jobs:
   install:
