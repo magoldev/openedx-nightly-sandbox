@@ -1,0 +1,118 @@
+name: Install from scratch
+# This is a reusable workflow: https://docs.github.com/en/actions/using-workflows/reusing-workflows
+
+on:
+  schedule:
+    # Run at 7am every day
+    # - cron:  '0 7 * * *'
+    # Run at 7am every Monday
+    - cron:  '0 7 * * 1'
+  workflow_dispatch:
+    inputs:
+      RESET:
+        description: Reset existing platform data?
+        type: boolean
+        default: true
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    env:
+      SSH: ssh -o StrictHostKeyChecking=no -i ~/.ssh/sandbox.key ubuntu@next-release.openedx.org
+      LMS_HOST: next-release.openedx.org
+      TUTOR: ~/.local/bin/tutor
+      # hack necessary because the inputs are not defined on scheduled calls:
+      # https://stackoverflow.com/a/73495922/356528
+      RESET: ${{ contains(inputs.RESET, 'true') }}
+    steps:
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh/
+          echo "$SSH_KEY" > ~/.ssh/sandbox.key
+          chmod 600 ~/.ssh/sandbox.key
+        env:
+          SSH_KEY: ${{ secrets.SSH_KEY }}
+      # Server system dependencies, to be run separately
+      # apt update && apt install -y python3-pip
+      - name: Install dependencies, tutor and plugins (from source)
+        run: |
+          $SSH "#! /bin/bash -e
+            pip install --user --upgrade pip setuptools
+            pip install --user --upgrade --editable git+https://github.com/overhangio/tutor.git@nightly#egg=tutor
+            pip install --user --upgrade --editable git+https://github.com/overhangio/tutor-forum.git@nightly#egg=tutor-forum
+            pip install --user --upgrade --editable git+https://github.com/overhangio/tutor-mfe.git@nightly#egg=tutor-mfe
+          "
+      # Backup
+      - name: Backup data
+        run: |
+          $SSH "#! /bin/bash -e
+            mkdir -p ~/apps/openedx/backup
+            if [ -d ~/.local/share/tutor/data/caddy ]
+            then
+              echo "Backing up caddy data"
+              sudo cp -r ~/.local/share/tutor/data/caddy ~/apps/openedx/backup/
+            else
+              echo "No caddy data to backup"
+            fi
+          "
+        if: ${{ env.RESET == 'true' }}
+      # Clear
+      - name: Clear existing platform
+        run: |
+          $SSH "#! /bin/bash -e
+            if [ -d ~/.local/share/tutor/env ]
+            then
+              echo "Stopping tutor containers"
+              $TUTOR local stop
+            else
+              echo "No running tutor container"
+            fi
+            sudo rm -rf ~/.local/share/tutor
+            docker container prune --force
+          "
+        if: ${{ env.RESET == 'true' }}
+      # Restore
+      - name: Restore some data
+        run: |
+          $SSH "#! /bin/bash -e
+            mkdir -p ~/.local/share/tutor/data/
+            if [ -d ~/apps/openedx/backup/caddy ]
+            then
+              echo "Restoring caddy backup data"
+              sudo cp -r ~/apps/openedx/backup/caddy ~/.local/share/tutor/data/
+            else
+              echo "No caddy backup data to restore"
+            fi
+          "
+        if: ${{ env.RESET == 'true' }}
+      # Configure
+      - name: Enable plugins
+        run: $SSH "$TUTOR plugins enable forum mfe"
+      - name: Configure tutor settings
+        run: |
+          $SSH "#! /bin/bash -e
+            $TUTOR config save \
+              --set LMS_HOST=$LMS_HOST \
+              --set CMS_HOST=studio.$LMS_HOST \
+              --set ENABLE_HTTPS=true \
+              --set PLATFORM_NAME='Open edx nightly sandbox'
+          "
+      # Build
+      - name: Build Docker images
+        run: |
+          $SSH "#! /bin/bash -e
+            # build openedx image and skip cache for "code" layer
+            $TUTOR images build --docker-arg=--no-cache-filter=code openedx
+            # build other images
+            $TUTOR images build all
+          "
+      - name: Launch
+        run: $SSH "$TUTOR local launch --non-interactive"
+      - name: "Provision: Create users"
+        run: |
+          $SSH "#! /bin/bash -e
+            $TUTOR local do createuser --staff --superuser --password=admin admin admin@openedx.org
+            $TUTOR local do createuser --password=student student student@openedx.org
+          "
+      - name: "Provision: Import demo course"
+        run: $SSH "$TUTOR local do importdemocourse"
