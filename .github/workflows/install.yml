@@ -4,13 +4,17 @@ name: Install from scratch
 on:
   schedule:
     # Run at 7am every day
-    - cron:  '0 7 * * *'
+    - cron: "0 7 * * *"
     # Run at 7am every Monday
     # - cron:  '0 7 * * 1'
   workflow_dispatch:
     inputs:
       RESET:
         description: Reset existing platform data?
+        type: boolean
+        default: false
+      UPGRADE:
+        description: Should run tutor upgrade command?
         type: boolean
         default: false
 
@@ -24,6 +28,7 @@ jobs:
       # hack necessary because the inputs are not defined on scheduled calls:
       # https://stackoverflow.com/a/73495922/356528
       RESET: ${{ contains(inputs.RESET, 'true') }}
+      UPGRADE: ${{ contains(inputs.UPGRADE, 'true') }}
     steps:
       - name: Configure SSH
         run: |
@@ -106,6 +111,10 @@ jobs:
             # build other images
             $TUTOR images build all
           "
+      - name: Run Tutor Upgrade
+        run: $SSH "$TUTOR local upgrade --from=quince"
+        if: ${{ env.UPGRADE == 'true' }}
+
       - name: Launch
         run: $SSH "$TUTOR local launch --non-interactive"
       - name: "Provision: Create users"
