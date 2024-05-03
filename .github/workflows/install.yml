@@ -17,6 +17,10 @@ on:
         description: Should run tutor upgrade command?
         type: boolean
         default: false
+      PRUNE:
+        description: Prune Docker system after every run?
+        type: boolean
+        default: false
 
 jobs:
   install:
@@ -29,6 +33,7 @@ jobs:
       # https://stackoverflow.com/a/73495922/356528
       RESET: ${{ contains(inputs.RESET, 'true') }}
       UPGRADE: ${{ contains(inputs.UPGRADE, 'true') }}
+      PRUNE: ${{ !contains(inputs.PRUNE, 'false') }}
     steps:
       - name: Configure SSH
         run: |
@@ -109,12 +114,11 @@ jobs:
             # build openedx image and skip cache for "code" layer
             $TUTOR images build --docker-arg=--no-cache-filter=code openedx
             # build other images
-            $TUTOR images build all
+            $TUTOR images build mfe forum
           "
       - name: Run Tutor Upgrade
         run: $SSH "$TUTOR local upgrade --from=quince"
         if: ${{ env.UPGRADE == 'true' }}
-
       - name: Launch
         run: $SSH "$TUTOR local launch --non-interactive"
       - name: "Provision: Create users"
@@ -125,3 +129,7 @@ jobs:
           "
       - name: "Provision: Import demo course"
         run: $SSH "$TUTOR local do importdemocourse"
+      - name: Prune Docker system
+        run: |
+          $SSH "docker system prune -a -f --volumes"
+        if: ${{ env.PRUNE == 'true' }}
