@@ -18,9 +18,9 @@ on:
         type: boolean
         default: false
       PRUNE:
-        description: Prune Docker system after every run?
+        description: Prune Docker system after run?
         type: boolean
-        default: false
+        default: true
 
 jobs:
   install:
@@ -121,14 +121,23 @@ jobs:
         if: ${{ env.UPGRADE == 'true' }}
       - name: Launch
         run: $SSH "$TUTOR local launch --non-interactive"
+        if: ${{ env.RESET == 'true' }}
       - name: "Provision: Create users"
         run: |
           $SSH "#! /bin/bash -e
             $TUTOR local do createuser --staff --superuser --password=admin admin admin@openedx.org
             $TUTOR local do createuser --password=student student student@openedx.org
           "
+        if: ${{ env.RESET == 'true' }}
       - name: "Provision: Import demo course"
         run: $SSH "$TUTOR local do importdemocourse"
+        if: ${{ env.RESET == 'true' }}
+      - name: Stop
+        run: $SSH "$TUTOR local stop"
+        if: ${{ env.RESET != 'true' }}
+      - name: Start
+        run: $SSH "$TUTOR local start -d"
+        if: ${{ env.RESET != 'true' }}
       - name: Prune Docker system
         run: |
           $SSH "docker system prune -a -f --volumes"
