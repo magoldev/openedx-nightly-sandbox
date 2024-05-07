@@ -126,6 +126,7 @@ jobs:
         run: |
           $SSH "#! /bin/bash -e
             $TUTOR local do createuser --staff --superuser --password=admin admin admin@openedx.org
+            $TUTOR local do createuser --staff --superuser --password=openedx openedx openedx@openedx.org
             $TUTOR local do createuser --password=student student student@openedx.org
           "
         if: ${{ env.RESET == 'true' }}
