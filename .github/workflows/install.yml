@@ -13,10 +13,6 @@ on:
         description: Reset existing platform data?
         type: boolean
         default: false
-      UPGRADE:
-        description: Should run tutor upgrade command?
-        type: boolean
-        default: false
       PRUNE:
         description: Prune Docker system after run?
         type: boolean
@@ -32,7 +28,6 @@ jobs:
       # hack necessary because the inputs are not defined on scheduled calls:
       # https://stackoverflow.com/a/73495922/356528
       RESET: ${{ contains(inputs.RESET, 'true') }}
-      UPGRADE: ${{ contains(inputs.UPGRADE, 'true') }}
       PRUNE: ${{ !contains(inputs.PRUNE, 'false') }}
     steps:
       - name: Configure SSH
@@ -116,9 +111,6 @@ jobs:
             # build other images
             $TUTOR images build mfe forum
           "
-      - name: Run Tutor Upgrade
-        run: $SSH "$TUTOR local upgrade --from=quince"
-        if: ${{ env.UPGRADE == 'true' }}
       - name: Launch
         run: $SSH "$TUTOR local launch --non-interactive"
         if: ${{ env.RESET == 'true' }}
