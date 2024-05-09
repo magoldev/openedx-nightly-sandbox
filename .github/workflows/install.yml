@@ -46,6 +46,8 @@ jobs:
             pip install --user --upgrade --editable git+https://github.com/overhangio/tutor.git@nightly#egg=tutor
             pip install --user --upgrade --editable git+https://github.com/overhangio/tutor-forum.git@nightly#egg=tutor-forum
             pip install --user --upgrade --editable git+https://github.com/overhangio/tutor-mfe.git@nightly#egg=tutor-mfe
+            pip install --user --upgrade --editable git+https://github.com/open-craft/tutor-contrib-meilisearch.git@main#egg=tutor-meilisearch
+            pip install --user --upgrade --editable git+https://github.com/openedx/tutor-contrib-aspects.git@main#egg=tutor-contrib-aspects
           "
       # Backup
       - name: Backup data
@@ -92,7 +94,7 @@ jobs:
         if: ${{ env.RESET == 'true' }}
       # Configure
       - name: Enable plugins
-        run: $SSH "$TUTOR plugins enable forum mfe"
+        run: $SSH "$TUTOR plugins enable forum mfe meilisearch aspects"
       - name: Configure tutor settings
         run: |
           $SSH "#! /bin/bash -e
