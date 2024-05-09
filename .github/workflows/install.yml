@@ -22,7 +22,7 @@ jobs:
   install:
     runs-on: ubuntu-latest
     env:
-      SSH: ssh -o StrictHostKeyChecking=no -i ~/.ssh/sandbox.key ubuntu@next-release.openedx.org
+      SSH: ssh -o StrictHostKeyChecking=no -o TCPKeepAlive=yes -o ServerAliveInterval=120 -i ~/.ssh/sandbox.key ubuntu@next-release.openedx.org
       LMS_HOST: next-release.openedx.org
       TUTOR: ~/.local/bin/tutor
       # hack necessary because the inputs are not defined on scheduled calls:
