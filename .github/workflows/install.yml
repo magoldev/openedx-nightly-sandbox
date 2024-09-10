@@ -22,8 +22,8 @@ jobs:
   install:
     runs-on: ubuntu-latest
     env:
-      SSH: ssh -o StrictHostKeyChecking=no -o TCPKeepAlive=yes -o ServerAliveInterval=120 -i ~/.ssh/sandbox.key ubuntu@next-release.openedx.org
-      LMS_HOST: next-release.openedx.org
+      SSH: ssh -o StrictHostKeyChecking=no -o TCPKeepAlive=yes -o ServerAliveInterval=120 -i ~/.ssh/sandbox.key ubuntu@master.openedx.io
+      LMS_HOST: master.openedx.io
       TUTOR: ~/.local/bin/tutor
       # hack necessary because the inputs are not defined on scheduled calls:
       # https://stackoverflow.com/a/73495922/356528
@@ -43,11 +43,11 @@ jobs:
         run: |
           $SSH "#! /bin/bash -e
             pip install --user --upgrade pip setuptools
-            pip install --user --upgrade --editable git+https://github.com/overhangio/tutor.git@nightly#egg=tutor
-            pip install --user --upgrade --editable git+https://github.com/overhangio/tutor-forum.git@nightly#egg=tutor-forum
-            pip install --user --upgrade --editable git+https://github.com/overhangio/tutor-mfe.git@nightly#egg=tutor-mfe
-            pip install --user --upgrade --editable git+https://github.com/open-craft/tutor-contrib-meilisearch.git@main#egg=tutor-meilisearch
-            pip install --user --upgrade --editable git+https://github.com/openedx/tutor-contrib-aspects.git@main#egg=tutor-contrib-aspects
+            pip install --user --upgrade \"tutor>=18,<19\"
+            pip install --user --upgrade \"tutor-forum>=18,<19\"
+            pip install --user --upgrade \"tutor-mfe>=18,<19\"
+            pip install --user --upgrade git+https://github.com/open-craft/tutor-contrib-meilisearch.git@main#egg=tutor-meilisearch
+            pip install --user --upgrade \"tutor-contrib-aspects>=1.0,<2.0\"
           "
       # Backup
       - name: Backup data
