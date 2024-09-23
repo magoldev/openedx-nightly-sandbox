@@ -2,13 +2,12 @@ name: tutor edly-custom plugins deployment
 # This is a reusable workflow: https://docs.github.com/en/actions/using-workflows/reusing-workflows
 
 on:
-  fork
 #  schedule:
     # Run at 7am every day
    # - cron: "0 7 * * *"
     # Run at 7am every Monday
     # - cron:  '0 7 * * 1'
-#  workflow_dispatch:
+  workflow_dispatch:
 #    inputs:
 #      RESET:
 #        description: Reset existing platform data?
