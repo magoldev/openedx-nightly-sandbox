@@ -1,4 +1,4 @@
-name: Install from scratch
+name: Tutor edly-custom plugins deployment 
 # This is a reusable workflow: https://docs.github.com/en/actions/using-workflows/reusing-workflows
 
 on:
