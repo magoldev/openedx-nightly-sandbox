@@ -1,0 +1,69 @@
+name: Install from scratch
+# This is a reusable workflow: https://docs.github.com/en/actions/using-workflows/reusing-workflows
+
+on:
+  fork
+#  schedule:
+    # Run at 7am every day
+   # - cron: "0 7 * * *"
+    # Run at 7am every Monday
+    # - cron:  '0 7 * * 1'
+#  workflow_dispatch:
+#    inputs:
+#      RESET:
+#        description: Reset existing platform data?
+#        type: boolean
+#        default: false
+#      PRUNE:
+#        description: Prune Docker system after run?
+#        type: boolean
+#        default: true
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    env:
+      SSH: ssh -o StrictHostKeyChecking=no -o TCPKeepAlive=yes -o ServerAliveInterval=120 -i ~/.ssh/sandbox.key ubuntu@master.openedx.io
+      LMS_HOST: master.openedx.io
+      TUTOR: ~/.local/bin/tutor
+      # hack necessary because the inputs are not defined on scheduled calls:
+      # https://stackoverflow.com/a/73495922/356528
+     # RESET: ${{ contains(inputs.RESET, 'true') }}
+     # PRUNE: ${{ !contains(inputs.PRUNE, 'false') }}
+    steps:
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh/
+          echo "$SSH_KEY" > ~/.ssh/sandbox.key
+          chmod 600 ~/.ssh/sandbox.key
+        env:
+          SSH_KEY: ${{ secrets.SSH_KEY_MASTER }}
+      # Server system dependencies, to be run separately
+      # apt update && apt install -y python3-pip
+      - name: Install dependencies, tutor and plugins (from source)
+        run: |
+          $SSH "#! /bin/bash -e
+            pip install --user git+https://$GIT_TOKEN@github.com/edly-io/tutor-theme-common@hina/axim-logo-change
+            $TUTOR config save
+            $TUTOR local do settheme commontheme
+          "
+      # Build
+      - name: Build Docker images
+        run: |
+          $SSH "#! /bin/bash -e
+            # build openedx image and skip cache for "code" layer
+            $TUTOR images build --docker-arg=--no-cache-filter=code openedx
+            # build other images
+          #  $TUTOR images build mfe forum
+          "
+
+   #   - name: "Provision: Import demo course"
+   #     run: $SSH "$TUTOR local do importdemocourse"
+   #     if: ${{ env.RESET == 'true' }}
+      
+      - name: Stop
+        run: $SSH "$TUTOR local stop"
+
+      - name: Start
+        run: $SSH "$TUTOR local start -d"
+   
