@@ -43,6 +43,7 @@ jobs:
         run: |
           $SSH "#! /bin/bash -e
             pip install --user git+https://$GIT_TOKEN@github.com/edly-io/tutor-theme-common@hina/axim-logo-change
+            $TUTOR plugins enable commontheme
             $TUTOR config save
             $TUTOR local do settheme commontheme
           "
