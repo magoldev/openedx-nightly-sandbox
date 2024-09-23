@@ -36,7 +36,7 @@ jobs:
           echo "$SSH_KEY" > ~/.ssh/sandbox.key
           chmod 600 ~/.ssh/sandbox.key
         env:
-          SSH_KEY: ${{ secrets.SSH_KEY_MASTER }}
+          SSH_KEY: ${{ secrets.SSH_KEY }}
       # Server system dependencies, to be run separately
       # apt update && apt install -y python3-pip
       - name: Install dependencies, tutor and plugins (from source)
