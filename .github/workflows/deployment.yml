@@ -47,6 +47,8 @@ jobs:
             $TUTOR config save
             $TUTOR local do settheme commontheme
           "
+          env:
+            GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
       # Build
       - name: Build Docker images
         run: |
