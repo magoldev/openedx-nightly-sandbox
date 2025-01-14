@@ -43,9 +43,9 @@ jobs:
         run: |
           $SSH "#! /bin/bash -e
             pip install --user --upgrade pip setuptools
-            pip install --user --upgrade \"tutor>=18,<19\"
-            pip install --user --upgrade \"tutor-forum>=18,<19\"
-            pip install --user --upgrade \"tutor-mfe>=18,<19\"
+            pip install --user --upgrade \"tutor>=19,<20\"
+            pip install --user --upgrade \"tutor-forum>=19,<20\"
+            pip install --user --upgrade \"tutor-mfe>=19,<20\"
             pip install --user --upgrade git+https://github.com/open-craft/tutor-contrib-meilisearch.git@main#egg=tutor-meilisearch
             pip install --user --upgrade \"tutor-contrib-aspects>=1.0,<2.0\"
           "
