@@ -43,6 +43,7 @@ jobs:
         run: |
           $SSH "#! /bin/bash -e
             pip install --user --upgrade pip setuptools
+            pip install --upgrade \"git+https://github.com/openedx/openedx-tutor-plugins.git#subdirectory=plugins/tutor-contrib-scout-apm\"
             pip install --user --upgrade \"tutor>=19,<20\"
             pip install --user --upgrade \"tutor-forum>=19,<20\"
             pip install --user --upgrade \"tutor-mfe>=19,<20\"
@@ -93,7 +94,7 @@ jobs:
         if: ${{ env.RESET == 'true' }}
       # Configure
       - name: Enable plugins
-        run: $SSH "$TUTOR plugins enable forum mfe meilisearch aspects"
+        run: $SSH "$TUTOR plugins enable forum mfe aspects scout-apm commontheme"
       - name: Configure tutor settings
         run: |
           $SSH "#! /bin/bash -e
@@ -110,7 +111,7 @@ jobs:
             # build openedx image and skip cache for "code" layer
             $TUTOR images build --docker-arg=--no-cache-filter=code openedx
             # build other images
-            $TUTOR images build mfe forum
+            $TUTOR images build openedx mfe
           "
       - name: Launch
         run: $SSH "$TUTOR local launch --non-interactive"
